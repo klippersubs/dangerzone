@@ -1,0 +1,9 @@
+.idea/
+node_modules/
+
+*.iml
+*.lock
+*.js
+*.map
+*.d.ts
+!src/*.d.ts
