@@ -1,6 +1,6 @@
 /// <reference path='./index.d.ts' />
 
-import { Parser, DomHandler, Dom, Tags, DomUtils } from 'htmlparser2';
+import { Parser, DomHandler, DomUtils } from 'htmlparser2';
 import { parse, Declaration, Node } from 'postcss';
 import * as React from 'react';
 import { taglike, join } from 'taghelper';
@@ -35,13 +35,13 @@ export { dangerzone as dz };
 /**
  * Converts HTML to `htmlparser2`'s DOM.
  * @param {string} html — input HTML.
- * @returns {Dom} — resulting DOM.
+ * @returns {HpDom} — resulting DOM.
  * @throws `htmlparser2`'s exception, if there is error while parsing HTML.
  * @throws `'Unknown HTML parsing error: Neither DOM nor Error returned'` if neither DOM nor error returned by parser.
  */
-export function htmlToDom (html : string) : Dom {
+export function htmlToDom (html : string) : HpDom {
     let err : Error | undefined;
-    let dom : Dom | undefined;
+    let dom : HpDom | undefined;
 
     const dh = new DomHandler((dhErr, dhDom) => {
         err = dhErr;
@@ -68,11 +68,11 @@ export function htmlToDom (html : string) : Dom {
 
 /**
  * Converts `htmlparser2`'s DOM to `ReactNode`s array.
- * @param {Dom} dom — `htmlparser2`'s DOM.
+ * @param {HpDom} dom — `htmlparser2`'s DOM.
  * @param {IDzCounter} [counter={val:0}] — counter object needed for adding `key` props to child nodes.
  * @returns {React.ReactNode[]} — resulting `ReactNode`s array.
  */
-export function domToReact (dom : Dom, counter : IDzCounter = { val : 0 }) : React.ReactNode[] {
+export function domToReact (dom : HpDom, counter : IDzCounter = { val : 0 }) : React.ReactNode[] {
     const fragment : React.ReactNode[] = [];
 
     for (const node of dom) {
@@ -100,7 +100,7 @@ export function domToReact (dom : Dom, counter : IDzCounter = { val : 0 }) : Rea
  * @param {IDzCounter} [counter={val:0}] — counter object needed for adding `key` props to child nodes.
  * @returns {React.DOMAttributes} — resulting React's `DOMAttributes` object.
  */
-export function attribsToReact (node : Tags, counter : IDzCounter = { val : 0 }) : React.DOMAttributes<Element> {
+export function attribsToReact (node : HpATag, counter : IDzCounter = { val : 0 }) : React.DOMAttributes<Element> {
     const attribs = node.attribs as any;
 
     if (attribs.checked) {
@@ -173,4 +173,58 @@ export function cssomToReact (nodes : Declaration[]) : React.CSSProperties {
     });
 
     return props;
+}
+
+// Shit for covering lack of typings for htmlparser2-related modules.
+
+export type HpDom = Array<HpNode>;
+
+export interface HpAttribs {
+    [ key : string ] : string;
+}
+
+export type HpNode = HpATag | HpText | HpCdata | HpComment;
+
+export interface HpANode {
+    prev   : HpANode | null;
+    next   : HpANode | null;
+    parent : HpANode | null;
+}
+
+export type HpATag = HpTag | HpStyle | HpScript;
+
+export interface HpTag extends HpANode {
+    type     : 'tag';
+    name     : string;
+    attribs  : HpAttribs;
+    children : HpDom;
+}
+
+export interface HpStyle extends HpANode {
+    type     : 'style';
+    name     : string;
+    attribs  : HpAttribs;
+    children : HpText[];
+}
+
+export interface HpScript extends HpANode {
+    type     : 'script';
+    name     : string;
+    attribs  : HpAttribs;
+    children : HpText[];
+}
+
+export interface HpText extends HpANode {
+    type : 'text';
+    data : string;
+}
+
+export interface HpCdata extends HpANode {
+    type     : 'cdata';
+    children : Array<{ type : 'text'; data : string }>;
+}
+
+export interface HpComment extends HpANode {
+    type : 'comment';
+    data : string;
 }

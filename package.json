@@ -1,6 +1,6 @@
 {
     "name"            : "dangerzone",
-    "version"         : "1.0.0",
+    "version"         : "1.0.1",
     "description"     : "Seamlessly use raw HTML in React without dangerouslySetInnerHTML.",
     "main"            : "index.js",
     "types"           : "index.d.ts",
